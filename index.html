@@ -33,6 +33,8 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             max-width: 450px;
             width: 100%;
+            z-index: 2; /* Make sure the container is above the particles */
+            position: relative; /* Ensure it's positioned relative to the document */
         }
 
         .logo {
@@ -102,7 +104,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 1;
+            z-index: 1; /* Ensure the particles are behind the content */
         }
 
         /* Additional styling */
@@ -121,9 +123,8 @@
         </div>
         <h1>KizFiles</h1>
         <input type="file" id="fileInput">
-        <div class="btn-wrapper">
-            <button onclick="uploadFile()">Upload</button>
-        </div>
+        <br><br>
+        <button onclick="uploadFile()">Upload</button>
         <p id="statusMessage"></p>
     </div>
 
@@ -215,20 +216,21 @@
             retina_detect: true
         });
 
+        // Function to generate random file names
+        function generateRandomFileName() {
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            let result = '';
+            const length = 12; // Length of the random file name
+            for (let i = 0; i < length; i++) {
+                result += characters.charAt(Math.floor(Math.random() * characters.length));
+            }
+            return result;
+        }
+
         // Define variables with your repository details
         const repoOwner = "NoobleGames";  // GitHub Username
         const repoName = "filehoster"; // Your GitHub repository name
-        const token = "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";  // Replace with your GitHub Personal Access Token
-
-        // Function to generate random file names
-        function generateRandomFileName(length = 12) {
-            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-            let randomFileName = "";
-            for (let i = 0; i < length; i++) {
-                randomFileName += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return randomFileName;
-        }
+        const token = "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";  // Replace with your GitHub Personal Access Token
 
         // Function to upload the file to GitHub
         async function uploadFile() {
@@ -247,10 +249,10 @@
             reader.onload = async function () {
                 const base64Content = reader.result.split(',')[1]; // Strip base64 prefix
 
-                // Generate a random filename
+                // Generate a random file name
                 const randomFileName = generateRandomFileName() + file.name.slice(file.name.lastIndexOf('.'));
-
-                // Create a new file path with the random filename
+                
+                // Create a new file path (you can customize this)
                 const filePath = "uploads/" + randomFileName;
 
                 // API URL for creating/updating the file in the GitHub repository
@@ -258,7 +260,7 @@
 
                 // Prepare the request body
                 const requestBody = {
-                    message: `Upload file ${randomFileName}`,  // Commit message
+                    message: `Upload file ${file.name}`,  // Commit message
                     content: base64Content,  // Base64 file content
                     branch: "main"  // Default branch (could be different if you use a different branch)
                 };

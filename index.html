@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub File Upload</title>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #1c1c1c;
+            color: white;
+            overflow: hidden;
+        }
+        .container {
+            text-align: center;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+        input[type="file"] {
+            padding: 12px;
+            font-size: 1rem;
+            border: 2px solid #4CAF50;
+            border-radius: 8px;
+            background-color: transparent;
+            color: white;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+        button {
+            padding: 12px 30px;
+            font-size: 1rem;
+            border: none;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        p {
+            font-size: 1rem;
+            color: #f1f1f1;
+            margin-top: 15px;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Upload a File to GitHub</h1>
+        <input type="file" id="fileInput">
+        <br><br>
+        <button onclick="uploadFile()">Upload</button>
+        <p id="statusMessage"></p>
+    </div>
+
+    <script>
+        // Define variables with your repository details
+        const repoOwner = "NoobleGames";  // GitHub Username
+        const repoName = "filehoster"; // Your GitHub repository name
+        const token = "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";  // Your GitHub Personal Access Token
+
+        // Function to upload the file to GitHub
+        async function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                document.getElementById('statusMessage').innerHTML = "<span class='error'>Please select a file to upload.</span>";
+                return;
+            }
+
+            // Read the file as a base64 string
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            
+            reader.onload = async function() {
+                const base64Content = reader.result.split(',')[1]; // Strip base64 prefix
+
+                // Create a new file path (you can customize this)
+                const filePath = "uploads/" + file.name;
+
+                // API URL for creating/updating the file in the GitHub repository
+                const apiUrl = `https://api.github.com/repos/${repoOwner}/${repoName}/contents/${filePath}`;
+
+                // Prepare the request body
+                const requestBody = {
+                    message: `Upload file ${file.name}`,  // Commit message
+                    content: base64Content,  // Base64 file content
+                    branch: "main"  // Default branch (could be different if you use a different branch)
+                };
+
+                try {
+                    // Send request to GitHub API to upload the file
+                    const response = await fetch(apiUrl, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `token ${token}`,
+                            'Accept': 'application/vnd.github.v3+json'
+                        },
+                        body: JSON.stringify(requestBody)
+                    });
+
+                    const responseData = await response.json();
+
+                    if (response.ok) {
+                        document.getElementById('statusMessage').innerHTML = `<span class='success'>File uploaded successfully! <a href="${responseData.content.download_url}" target="_blank">View File</a></span>`;
+                    } else {
+                        document.getElementById('statusMessage').innerHTML = `<span class='error'>Failed to upload file: ${responseData.message}</span>`;
+                    }
+                } catch (error) {
+                    document.getElementById('statusMessage').innerHTML = `<span class='error'>Error: ${error.message}</span>`;
+                }
+            };
+
+            reader.onerror = function(error) {
+                document.getElementById('statusMessage').innerHTML = `<span class='error'>Error reading file: ${error}</span>`;
+            };
+        }
+    </script>
+</body>
+</html>
